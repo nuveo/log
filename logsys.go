@@ -10,9 +10,11 @@ import (
 type MsgType uint8
 
 const (
-	Message MsgType = 0
-	Debug   MsgType = 1
-	Error   MsgType = 0x80
+	Message  MsgType = 0
+	Message2 MsgType = 1
+	Warning  MsgType = 2
+	Debug    MsgType = 3
+	Error    MsgType = 0x80
 )
 
 var DebugMode = false
@@ -30,8 +32,14 @@ func Println(m MsgType, msg ...interface{}) {
 	case Message:
 		color = "\x1b[37m" // White
 		prefix = "msg"
-	case Debug:
+	case Message2:
+		color = "\x1b[92m" // Light green
+		prefix = "msg"
+	case Warning:
 		color = "\x1b[93m" // Light Yellow
+		prefix = "warning"
+	case Debug:
+		color = "\x1b[96m" // Light Cyan
 		prefix = "debug"
 	case Error:
 		color = "\x1b[91m" // Light Red

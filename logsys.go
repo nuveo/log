@@ -23,21 +23,17 @@ const (
 	errorConst    msgType = 0x80
 )
 
-/*
-TODO: Create a more flexible HTTP error return as an example below
-func HTTPError(w http.ResponseWriter, code int) {
-	msg := http.StatusText(code)
-	pln(errorConst, msg)
-	m := make(map[string]string)
-	m["status"] = "error"
-	m["error"] = msg
-	b, _ := json.MarshalIndent(m, "", "\t")
-	http.Error(w, string(b), code)
-}
-*/
+type LogInterface map[string]interface{}
 
-type DebugInterface interface{}
-type LogInterface interface{}
+const DefaultLogFormatter = "{{.Color}}{{.Time}} [{{.Prefix}}] {{.File}}:{{.Line}} {{.Message}}{{.ColorReset}}\n"
+
+func DefaultLogHandler(logData LogInterface) (string, LogInterface) {
+
+	logData["Time"] = logData["Time"].(time.Time).UTC().Format("2006/01/02 15:04:05")
+	logData["File"] = filepath.Base(logData["File"].(string))
+
+	return DefaultLogFormatter, logData
+}
 
 var (
 	ColorMessage  = "\x1b[37m"   // White
@@ -53,28 +49,12 @@ var (
 	PrefixDebug    = "debug"
 	PrefixError    = "error"
 
-	DebugFormatter = "{{.File}}:{{.Line}}"
-	LogFormatter   = "{{.Color}}{{.Time}} [{{.Prefix}}] {{.DebugInfo}} {{.Message}}{{.ColorReset}}\n"
-
-	DebugBody DebugInterface
-	LogBody   LogInterface
-
-	/*
-		"Color":      color,
-			"Time":       time.Now().UTC().Format("2006/01/02 15:04:05"),
-			"Prefix":     prefix,
-			"DebugInfo":  debugInfo,
-			"Message":    fmt.Sprint(msg...),
-			"ColorReset": ColorReset,
-	*/
-
-	LogHandler func(LogData map[string]interface{}, Message ...string) (string, map[string]interface{}) = func(
-		LogData map[string]interface{},
-		Message ...string) (formater string, body map[string]interface{}) {
-
-		return
-	}
+	LogHandler func(logData LogInterface) (string, LogInterface)
 )
+
+func init() {
+	LogHandler = DefaultLogHandler
+}
 
 // Fatal show message with line break at the end and exit to OS.
 func Fatal(msg ...interface{}) {
@@ -99,11 +79,6 @@ func Debugln(msg ...interface{}) {
 }
 
 func pln(m msgType, msg ...interface{}) {
-	if m == debugConst && !DebugMode {
-		return
-	}
-
-	var debugInfo string
 	var color string
 	var prefix string
 
@@ -125,41 +100,27 @@ func pln(m msgType, msg ...interface{}) {
 		prefix = PrefixError
 	}
 
-	if DebugMode {
-		_, fn, line, _ := runtime.Caller(2)
-		fn = filepath.Base(fn)
+	var line int
+	var file string
+	_, file, line, _ = runtime.Caller(2)
 
-		DebugBody = map[string]interface{}{
-			"File": fn,
-			"Line": line,
-		}
-
-		buff := new(bytes.Buffer)
-		t, _ := template.New("debug").Parse(DebugFormatter)
-
-		t.Execute(buff, DebugBody)
-
-		debugInfo = string(buff.Bytes())
-
-	}
-
-	LogBody = map[string]interface{}{
+	logBody := LogInterface{
 		"Color":      color,
-		"Time":       time.Now().UTC().Format("2006/01/02 15:04:05"),
+		"Time":       time.Now(),
 		"Prefix":     prefix,
-		"DebugInfo":  debugInfo,
 		"Message":    fmt.Sprint(msg...),
 		"ColorReset": ColorReset,
+		"Line":       line,
+		"File":       file,
 	}
 
-	//runtime.Caller()
-
-	LogHandler(LogBody, message)
+	var logFormater string
+	logFormater, logBody = LogHandler(logBody)
 
 	buff := new(bytes.Buffer)
-	t, _ := template.New("log").Parse(LogFormatter)
+	t, _ := template.New("log").Parse(logFormater)
 
-	t.Execute(buff, LogBody)
+	t.Execute(buff, logBody)
 
 	fmt.Print(string(buff.Bytes()))
 }

@@ -35,6 +35,13 @@ func DefaultLogHandler(logData LogInterface) (string, LogInterface) {
 	return DefaultLogFormatter, logData
 }
 
+func DefaultDebugLogHandler(logData LogInterface) (string, LogInterface) {
+
+	logData["Time"] = logData["Time"].(time.Time).UTC().Format("2006/01/02 15:04:05")
+
+	return DefaultLogFormatter, logData
+}
+
 var (
 	ColorMessage  = "\x1b[37m"   // White
 	ColorMessage2 = "\x1b[92m"   // Light green
@@ -117,10 +124,15 @@ func pln(m msgType, msg ...interface{}) {
 	var logFormater string
 	logFormater, logBody = LogHandler(logBody)
 
+	t, err := template.New("log").Parse(logFormater)
+	if err != nil {
+		panic(err)
+	}
+
 	buff := new(bytes.Buffer)
-	t, _ := template.New("log").Parse(logFormater)
-
-	t.Execute(buff, logBody)
-
+	err = t.Execute(buff, logBody)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Print(string(buff.Bytes()))
 }

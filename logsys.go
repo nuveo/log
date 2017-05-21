@@ -21,19 +21,6 @@ const (
 	errorConst    msgType = 0x80
 )
 
-/*
-TODO: Create a more flexible HTTP error return as an example below
-func HTTPError(w http.ResponseWriter, code int) {
-	msg := http.StatusText(code)
-	pln(errorConst, msg)
-	m := make(map[string]string)
-	m["status"] = "error"
-	m["error"] = msg
-	b, _ := json.MarshalIndent(m, "", "\t")
-	http.Error(w, string(b), code)
-}
-*/
-
 // Fatal show message with line break at the end and exit to OS.
 func Fatal(msg ...interface{}) {
 	pln(errorConst, msg...)

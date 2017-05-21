@@ -11,9 +11,7 @@ import (
 )
 
 type msgType uint8
-
-// DebugMode Enable debug mode
-var DebugMode bool
+type LogInterface map[string]interface{}
 
 const (
 	MessageLog  msgType = 0
@@ -26,23 +24,6 @@ const (
 
 	DefaultLogFormatter = "{{.Color}}{{.Time}} [{{.Prefix}}] {{.File}}:{{.Line}} {{.Message}}{{.ColorReset}}\n"
 )
-
-type LogInterface map[string]interface{}
-
-func DefaultLogHandler(logData LogInterface) (string, LogInterface) {
-
-	logData["Time"] = logData["Time"].(time.Time).UTC().Format("2006/01/02 15:04:05")
-	logData["File"] = filepath.Base(logData["File"].(string))
-
-	return DefaultLogFormatter, logData
-}
-
-func DefaultDebugLogHandler(logData LogInterface) (string, LogInterface) {
-
-	logData["Time"] = logData["Time"].(time.Time).UTC().Format("2006/01/02 15:04:05")
-
-	return DefaultLogFormatter, logData
-}
 
 var (
 	Colors = []string{
@@ -68,6 +49,21 @@ func init() {
 	if LogHandler == nil {
 		LogHandler = DefaultLogHandler
 	}
+}
+
+func DefaultLogHandler(logData LogInterface) (string, LogInterface) {
+
+	logData["Time"] = logData["Time"].(time.Time).UTC().Format("2006/01/02 15:04:05")
+	logData["File"] = filepath.Base(logData["File"].(string))
+
+	return DefaultLogFormatter, logData
+}
+
+func DefaultDebugLogHandler(logData LogInterface) (string, LogInterface) {
+
+	logData["Time"] = logData["Time"].(time.Time).UTC().Format("2006/01/02 15:04:05")
+
+	return DefaultLogFormatter, logData
 }
 
 // Fatal show message with line break at the end and exit to OS.

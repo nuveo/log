@@ -7,11 +7,19 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"time"
 )
 
 type msgType uint8
 type LogInterface map[string]interface{}
+
+type msgChanData struct {
+	MsgType msgType
+	Message []interface{}
+	Line    int
+	File    string
+}
 
 const (
 	MessageLog  msgType = 0
@@ -43,12 +51,30 @@ var (
 	}
 
 	LogHandler func(logData LogInterface) (string, LogInterface)
+	logChanel  chan msgChanData
+
+	wg sync.WaitGroup
 )
 
 func init() {
 	if LogHandler == nil {
+		wg = sync.WaitGroup{}
 		LogHandler = DefaultLogHandler
+		logChanel = make(chan msgChanData)
+
+		go func() {
+			for {
+				m := <-logChanel
+				wg.Add(1)
+				pln(m)
+				wg.Done()
+			}
+		}()
 	}
+}
+
+func Wait() {
+	wg.Wait()
 }
 
 func DefaultLogHandler(logData LogInterface) (string, LogInterface) {
@@ -68,38 +94,41 @@ func DefaultDebugLogHandler(logData LogInterface) (string, LogInterface) {
 
 // Fatal show message with line break at the end and exit to OS.
 func Fatal(msg ...interface{}) {
-	pln(ErrorLog, msg...)
+	send(ErrorLog, msg)
 	os.Exit(-1)
 }
 
 // Errorln message with line break at the end.
 func Errorln(msg ...interface{}) {
-	pln(ErrorLog, msg...)
+	send(ErrorLog, msg)
 }
 
 // Println shows message on screen with line break at the end.
 func Println(msg ...interface{}) {
-	pln(MessageLog, msg...)
+	send(MessageLog, msg)
 }
 
 // Debugln shows debug message on screen with line break at the end.
 // If debug mode is not active no message is displayed
 func Debugln(msg ...interface{}) {
-	pln(DebugLog, msg...)
+	send(DebugLog, msg)
 }
 
-func pln(m msgType, msg ...interface{}) {
-
+func send(mt msgType, msg ...interface{}) {
 	_, file, line, _ := runtime.Caller(2)
+	logChanel <- msgChanData{MsgType: mt, Message: msg, Line: line, File: file}
+}
+
+func pln(m msgChanData) {
 
 	logBody := LogInterface{
-		"Color":      Colors[m],
+		"Color":      Colors[m.MsgType],
 		"ColorReset": ColorReset,
-		"File":       file,
-		"Line":       line,
-		"Message":    fmt.Sprint(msg...),
-		"MsgType":    m,
-		"Prefix":     Prefixes[m],
+		"File":       m.File,
+		"Line":       m.Line,
+		"Message":    fmt.Sprint(m.Message...),
+		"MsgType":    m.MsgType,
+		"Prefix":     Prefixes[m.MsgType],
 		"Time":       time.Now(),
 	}
 

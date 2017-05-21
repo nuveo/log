@@ -16,8 +16,6 @@ const (
 	WarningLog  msgType = 2
 	DebugLog    msgType = 3
 	ErrorLog    msgType = 4
-
-	ColorReset = "\033[0;00m" // Return terminal to default color
 )
 
 var (

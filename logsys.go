@@ -65,7 +65,6 @@ func init() {
 		go func() {
 			for {
 				m := <-logChanel
-				wg.Add(1)
 				pln(m)
 				wg.Done()
 			}
@@ -116,6 +115,7 @@ func Debugln(msg ...interface{}) {
 
 func send(mt msgType, msg ...interface{}) {
 	_, file, line, _ := runtime.Caller(2)
+	wg.Add(1)
 	logChanel <- msgChanData{MsgType: mt, Message: msg, Line: line, File: file}
 }
 

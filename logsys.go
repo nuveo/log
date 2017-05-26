@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -38,47 +39,79 @@ var (
 		DebugLog:    "debug",
 		ErrorLog:    "error",
 	}
+
+	wg        sync.WaitGroup
+	logChanel chan msgChanData
 )
+
+type msgChanData struct {
+	mt   msgType
+	msg  []interface{}
+	line int
+	file string
+}
+
+func init() {
+	wg = sync.WaitGroup{}
+	logChanel = make(chan msgChanData)
+
+	go func() {
+		for {
+			m := <-logChanel
+			pln(m)
+			wg.Done()
+		}
+	}()
+}
+
+func Wait() {
+	wg.Wait()
+}
 
 // Fatal show message with line break at the end and exit to OS.
 func Fatal(msg ...interface{}) {
-	pln(ErrorLog, msg...)
+	send(ErrorLog, msg)
 	os.Exit(-1)
 }
 
 // Errorln message with line break at the end.
 func Errorln(msg ...interface{}) {
-	pln(ErrorLog, msg...)
+	send(ErrorLog, msg)
 }
 
 // Println shows message on screen with line break at the end.
 func Println(msg ...interface{}) {
-	pln(MessageLog, msg...)
+	send(MessageLog, msg)
 }
 
 // Debugln shows debug message on screen with line break at the end.
 // If debug mode is not active no message is displayed
 func Debugln(msg ...interface{}) {
-	pln(DebugLog, msg...)
+	send(DebugLog, msg)
 }
 
-func pln(m msgType, msg ...interface{}) {
-	if m == DebugLog && !DebugMode {
+func send(mt msgType, msg ...interface{}) {
+	_, file, line, _ := runtime.Caller(2)
+	wg.Add(1)
+	logChanel <- msgChanData{mt: mt, msg: msg, line: line, file: file}
+}
+
+func pln(m msgChanData) {
+	if m.mt == DebugLog && !DebugMode {
 		return
 	}
 
 	var debugInfo string
 
 	if DebugMode {
-		_, fn, line, _ := runtime.Caller(2)
-		fn = filepath.Base(fn)
-		debugInfo = fmt.Sprintf("%s:%d ", fn, line)
+		m.file = filepath.Base(m.file)
+		debugInfo = fmt.Sprintf("%s:%d ", m.file, m.line)
 	}
 
 	fmt.Printf("%s%s [%s] %s%s\033[0;00m\n",
-		Colors[m],
+		Colors[m.mt],
 		time.Now().UTC().Format("2006/01/02 15:04:05"),
-		Prefixes[m],
+		Prefixes[m.mt],
 		debugInfo,
-		fmt.Sprint(msg...))
+		fmt.Sprint(m.msg...))
 }

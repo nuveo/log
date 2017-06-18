@@ -52,6 +52,11 @@ func Errorln(msg ...interface{}) {
 }
 
 // Println shows message on screen with line break at the end.
+func Warningln(msg ...interface{}) {
+	pln(WarningLog, msg...)
+}
+
+// Println shows message on screen with line break at the end.
 func Println(msg ...interface{}) {
 	pln(MessageLog, msg...)
 }

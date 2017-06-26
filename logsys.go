@@ -1,7 +1,9 @@
 package log
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -43,6 +45,20 @@ var (
 	now = time.Now
 )
 
+// HTTPError write lot to stdout and return json error on http.ResponseWriter with http error code.
+func HTTPError(w http.ResponseWriter, code int) {
+	msg := http.StatusText(code)
+	Errorln(msg)
+	m := make(map[string]string)
+	m["status"] = "error"
+	m["error"] = msg
+	b, err := json.MarshalIndent(m, "", "\t")
+	if err != nil {
+		Errorln(err.Error())
+	}
+	http.Error(w, string(b), code)
+}
+
 // Fatal show message with line break at the end and exit to OS.
 func Fatal(msg ...interface{}) {
 	pln(ErrorLog, msg...)
@@ -54,7 +70,7 @@ func Errorln(msg ...interface{}) {
 	pln(ErrorLog, msg...)
 }
 
-// Println shows message on screen with line break at the end.
+// Warningln shows warning message on screen with line break at the end.
 func Warningln(msg ...interface{}) {
 	pln(WarningLog, msg...)
 }

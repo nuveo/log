@@ -3,6 +3,8 @@ package log
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"regexp"
 	"testing"
@@ -61,7 +63,10 @@ func TestLog(t *testing.T) {
 	DebugMode = true
 
 	rescueStdout := os.Stdout
-	defer func() { os.Stdout = rescueStdout }()
+	defer func() {
+		os.Stdout = rescueStdout
+		DebugMode = false
+	}()
 
 	r, w, err := os.Pipe()
 	if err != nil {
@@ -90,6 +95,57 @@ func TestLog(t *testing.T) {
 
 	if !match {
 		t.Fatalf("Error, 'Debugln' printed %q, not match with expected", string(out))
+	}
+
+}
+
+func TestHTTPError(t *testing.T) {
+	now = func() time.Time { return time.Unix(1498405744, 0) }
+
+	rescueStdout := os.Stdout
+	DebugMode = false
+	defer func() { os.Stdout = rescueStdout }()
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		return
+	}
+	os.Stdout = w
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		HTTPError(w, http.StatusBadRequest)
+	}
+
+	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
+	httpw := httptest.NewRecorder()
+	handler(httpw, req)
+
+	resp := httpw.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	os.Stdout = rescueStdout
+	err = w.Close()
+	if err != nil {
+		return
+	}
+
+	out, err := ioutil.ReadAll(r)
+	if err != nil {
+		return
+	}
+
+	valueExpected := "\x1b[91m2017/06/25 15:49:04 [error] Bad Request\x1b[0;00m\n"
+	if string(out) != valueExpected {
+		t.Fatalf("Error, 'HTTPError' printed %q, expected %q", string(out), valueExpected)
+	}
+
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("Error, 'HTTPError' status code %v, expected 400", resp.StatusCode)
+	}
+
+	valueExpected = "{\n\t\"error\": \"Bad Request\",\n\t\"status\": \"error\"\n}\n"
+	if string(body) != valueExpected {
+		t.Fatalf("Error, 'HTTPError' write to client %q, expected %q", string(body), valueExpected)
 	}
 
 }

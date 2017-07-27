@@ -1,5 +1,5 @@
-# logSys
-A simple to use logo system, minimalist but with features for debugging and differentiation of messages
+# log
+A simple to use log system, minimalist but with features for debugging and differentiation of messages
 
 
 ## Example
@@ -12,7 +12,7 @@ package main
 
 import (
     "fmt"
-    "github.com/nuveo/logSys"
+    "github.com/nuveo/log"
 )
 
 func main() {

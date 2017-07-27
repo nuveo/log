@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/nuveo/logSys"
+
+	"github.com/nuveo/log"
 )
 
 func main() {

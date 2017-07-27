@@ -87,7 +87,7 @@ func TestLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	rstr := "\x1b\\[96m2017/06/25 15:49:04 \\[debug\\] logsys_test.go:\\d+ log test\x1b\\[0;00m\n"
+	rstr := "\x1b\\[96m2017/06/25 15:49:04 \\[debug\\] log_test.go:\\d+ log test\x1b\\[0;00m\n"
 	match, err := regexp.Match(rstr, out)
 	if err != nil {
 		t.Fatal(err.Error())

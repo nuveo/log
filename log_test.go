@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func validate(key string, logFunc func(msg ...interface{}), valueExpected string) (err error) {
+func validate(key string, logFunc func(msg ...interface{}), valueExpected string, msg ...interface{}) (err error) {
 	rescueStdout := os.Stdout
 	defer func() { os.Stdout = rescueStdout }()
 
@@ -21,7 +21,7 @@ func validate(key string, logFunc func(msg ...interface{}), valueExpected string
 	}
 	os.Stdout = w
 
-	logFunc("log test")
+	logFunc(msg...)
 
 	err = w.Close()
 	if err != nil {
@@ -53,13 +53,29 @@ func TestLog(t *testing.T) {
 		{"Warningln", Warningln, "\x1b[93m2017/06/25 15:49:04 [warning] log test\x1b[0;00m\n"},
 		{"Debugln", Debugln, ""},
 	}
-
+	formatedData := []struct {
+		key           string
+		logFunc       func(msg ...interface{})
+		expectedValue string
+	}{
+		{"Println", Println, "\x1b[37m2017/06/25 15:49:04 [msg] formated log 1.12\x1b[0;00m\n"},
+		{"Errorln", Errorln, "\x1b[91m2017/06/25 15:49:04 [error] formated log 1.12\x1b[0;00m\n"},
+		{"Warningln", Warningln, "\x1b[93m2017/06/25 15:49:04 [warning] formated log 1.12\x1b[0;00m\n"},
+	}
 	for _, v := range data {
-		err := validate(v.key, v.logFunc, v.expectedValue)
+		err := validate(v.key, v.logFunc, v.expectedValue, "log test")
 		if err != nil {
 			t.Fatal(err.Error())
 		}
 	}
+	for _, v := range formatedData {
+		err := validate(v.key, v.logFunc, v.expectedValue, "%s %s %.2f", "formated", "log", 1.1234)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+	}
+
+
 	DebugMode = true
 
 	rescueStdout := os.Stdout

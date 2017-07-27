@@ -104,5 +104,5 @@ func pln(m msgType, msg ...interface{}) {
 		now().UTC().Format("2006/01/02 15:04:05"),
 		Prefixes[m],
 		debugInfo,
-		fmt.Sprint(msg...))
+		fmt.Sprintf(msg[0].(string), msg[1:]...))
 }

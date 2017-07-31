@@ -52,10 +52,7 @@ func HTTPError(w http.ResponseWriter, code int) {
 	m := make(map[string]string)
 	m["status"] = "error"
 	m["error"] = msg
-	b, err := json.MarshalIndent(m, "", "\t")
-	if err != nil {
-		Errorln(err.Error())
-	}
+	b, _ := json.MarshalIndent(m, "", "\t")
 	http.Error(w, string(b), code)
 }
 

@@ -11,13 +11,16 @@ import (
 )
 
 type msgType uint8
+type outType uint8
 
 const (
-	MessageLog  msgType = 0
-	Message2Log msgType = 1
-	WarningLog  msgType = 2
-	DebugLog    msgType = 3
-	ErrorLog    msgType = 4
+	MessageLog   msgType = 0
+	Message2Log  msgType = 1
+	WarningLog   msgType = 2
+	DebugLog     msgType = 3
+	ErrorLog     msgType = 4
+	FormattedOut outType = 0
+	LineOut      outType = 1
 )
 
 var (
@@ -61,37 +64,58 @@ func HTTPError(w http.ResponseWriter, code int) {
 
 // Fatal show message with line break at the end and exit to OS.
 func Fatal(msg ...interface{}) {
-	pln(ErrorLog, msg...)
+	pln(ErrorLog, LineOut, msg...)
 	os.Exit(-1)
 }
 
 // Errorln message with line break at the end.
 func Errorln(msg ...interface{}) {
-	pln(ErrorLog, msg...)
+	pln(ErrorLog, LineOut, msg...)
 }
 
-// Warningln shows warning message on screen with line break at the end.
+// Errorf shows formatted error message on stdout without line break at the end.
+func Errorf(msg ...interface{}) {
+	pln(ErrorLog, FormattedOut, msg...)
+}
+
+// Warningln shows warning message on stdout with line break at the end.
 func Warningln(msg ...interface{}) {
-	pln(WarningLog, msg...)
+	pln(WarningLog, LineOut, msg...)
 }
 
-// Println shows message on screen with line break at the end.
+// Warningf shows formatted warning message on stdout without line break at the end.
+func Warningf(msg ...interface{}) {
+	pln(WarningLog, FormattedOut, msg...)
+}
+
+// Println shows message on stdout with line break at the end.
 func Println(msg ...interface{}) {
-	pln(MessageLog, msg...)
+	pln(MessageLog, LineOut, msg...)
 }
 
-// Debugln shows debug message on screen with line break at the end.
+// Printf shows formatted message on stdout without line break at the end.
+func Printf(msg ...interface{}) {
+	pln(MessageLog, FormattedOut, msg...)
+}
+
+// Debugln shows debug message on stdout with line break at the end.
 // If debug mode is not active no message is displayed
 func Debugln(msg ...interface{}) {
-	pln(DebugLog, msg...)
+	pln(DebugLog, LineOut, msg...)
 }
 
-func pln(m msgType, msg ...interface{}) {
+// Debugf shows debug message on stdout without line break at the end.
+// If debug mode is not active no message is displayed
+func Debugf(msg ...interface{}) {
+	pln(DebugLog, FormattedOut, msg...)
+}
+
+func pln(m msgType, o outType, msg ...interface{}) {
 	if m == DebugLog && !DebugMode {
 		return
 	}
 
-	var debugInfo string
+	var debugInfo, lineBreak, output string
 
 	if DebugMode {
 		_, fn, line, _ := runtime.Caller(2)
@@ -99,10 +123,18 @@ func pln(m msgType, msg ...interface{}) {
 		debugInfo = fmt.Sprintf("%s:%d ", fn, line)
 	}
 
-	fmt.Printf("%s%s [%s] %s%s\033[0;00m\n",
+	if o == FormattedOut {
+		output = fmt.Sprintf(msg[0].(string), msg[1:]...)
+	} else {
+		output = fmt.Sprint(msg...)
+		lineBreak = "\n"
+	}
+
+	fmt.Printf("%s%s [%s] %s%s\033[0;00m%s",
 		Colors[m],
 		now().UTC().Format("2006/01/02 15:04:05"),
 		Prefixes[m],
 		debugInfo,
-		fmt.Sprintf(msg[0].(string), msg[1:]...))
+		output,
+		lineBreak)
 }

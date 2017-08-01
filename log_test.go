@@ -58,9 +58,10 @@ func TestLog(t *testing.T) {
 		logFunc       func(msg ...interface{})
 		expectedValue string
 	}{
-		{"Println", Println, "\x1b[37m2017/06/25 15:49:04 [msg] formated log 1.12\x1b[0;00m\n"},
-		{"Errorln", Errorln, "\x1b[91m2017/06/25 15:49:04 [error] formated log 1.12\x1b[0;00m\n"},
-		{"Warningln", Warningln, "\x1b[93m2017/06/25 15:49:04 [warning] formated log 1.12\x1b[0;00m\n"},
+		{"Printf", Printf, "\x1b[37m2017/06/25 15:49:04 [msg] formated log 1.12\x1b[0;00m"},
+		{"Errorf", Errorf, "\x1b[91m2017/06/25 15:49:04 [error] formated log 1.12\x1b[0;00m"},
+		{"Warningf", Warningf, "\x1b[93m2017/06/25 15:49:04 [warning] formated log 1.12\x1b[0;00m"},
+		{"Debugf", Debugf, ""},
 	}
 	for _, v := range data {
 		err := validate(v.key, v.logFunc, v.expectedValue, "log test")
@@ -74,7 +75,6 @@ func TestLog(t *testing.T) {
 			t.Fatal(err.Error())
 		}
 	}
-
 
 	DebugMode = true
 

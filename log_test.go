@@ -11,29 +11,39 @@ import (
 	"time"
 )
 
-func validate(key string, logFunc func(msg ...interface{}), valueExpected string) (err error) {
+func getOutput(logFunc func(msg ...interface{}), msg ...interface{}) ([]byte, error) {
 	rescueStdout := os.Stdout
 	defer func() { os.Stdout = rescueStdout }()
 
 	r, w, err := os.Pipe()
 	if err != nil {
-		return
+		return nil, err
 	}
 	os.Stdout = w
 
-	logFunc("log test")
+	logFunc(msg...)
 
 	err = w.Close()
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	out, err := ioutil.ReadAll(r)
 	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func validate(key string, logFunc func(msg ...interface{}), valueExpected string, msg ...interface{}) (err error) {
+	out, err := getOutput(logFunc, msg...)
+	if err != nil {
 		return
 	}
-
-	if string(out) != valueExpected {
+	match, err := regexp.Match(valueExpected, out)
+	if err != nil {
+		return
+	} else if !match {
 		err = fmt.Errorf("Error, '%s' printed %q, expected %q", key, string(out), valueExpected)
 	}
 	return
@@ -48,53 +58,42 @@ func TestLog(t *testing.T) {
 		logFunc       func(msg ...interface{})
 		expectedValue string
 	}{
-		{"Println", Println, "\x1b[37m2017/06/25 15:49:04 [msg] log test\x1b[0;00m\n"},
-		{"Errorln", Errorln, "\x1b[91m2017/06/25 15:49:04 [error] log test\x1b[0;00m\n"},
-		{"Warningln", Warningln, "\x1b[93m2017/06/25 15:49:04 [warning] log test\x1b[0;00m\n"},
+		{"Println", Println, "\x1b\\[37m2017/06/25 15:49:04 \\[msg\\] log test\x1b\\[0;00m\n"},
+		{"Errorln", Errorln, "\x1b\\[91m2017/06/25 15:49:04 \\[error\\] log test\x1b\\[0;00m\n"},
+		{"Warningln", Warningln, "\x1b\\[93m2017/06/25 15:49:04 \\[warning\\] log test\x1b\\[0;00m\n"},
 		{"Debugln", Debugln, ""},
 	}
-
+	formattedData := []struct {
+		key           string
+		logFunc       func(msg ...interface{})
+		expectedValue string
+	}{
+		{"Printf", Printf, "\x1b\\[37m2017/06/25 15:49:04 \\[msg\\] formatted log 1.12\x1b\\[0;00m"},
+		{"Errorf", Errorf, "\x1b\\[91m2017/06/25 15:49:04 \\[error\\] formatted log 1.12\x1b\\[0;00m"},
+		{"Warningf", Warningf, "\x1b\\[93m2017/06/25 15:49:04 \\[warning\\] formatted log 1.12\x1b\\[0;00m"},
+		{"Debugf", Debugf, ""},
+	}
 	for _, v := range data {
-		err := validate(v.key, v.logFunc, v.expectedValue)
+		err := validate(v.key, v.logFunc, v.expectedValue, "log test")
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+	}
+	for _, v := range formattedData {
+		err := validate(v.key, v.logFunc, v.expectedValue, "%s %s %.2f", "formatted", "log", 1.1234)
 		if err != nil {
 			t.Fatal(err.Error())
 		}
 	}
 	DebugMode = true
 
-	rescueStdout := os.Stdout
-	defer func() {
-		os.Stdout = rescueStdout
-		DebugMode = false
-	}()
-
-	r, w, err := os.Pipe()
-	if err != nil {
-		return
-	}
-	os.Stdout = w
-
-	Debugln("log test")
-
-	os.Stdout = rescueStdout
-
-	err = w.Close()
+	err := validate("Debugln", Debugln, "\x1b\\[96m2017/06/25 15:49:04 \\[debug\\] log_test.go:\\d+ log test\x1b\\[0;00m\n", "log test")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-
-	out, err := ioutil.ReadAll(r)
+	err = validate("Debugf", Debugf, "\x1b\\[96m2017/06/25 15:49:04 \\[debug\\] log_test.go:\\d+ formatted log 1.12\x1b\\[0;00m", "%s %s %.2f", "formatted", "log", 1.1234)
 	if err != nil {
 		t.Fatal(err.Error())
-	}
-	rstr := "\x1b\\[96m2017/06/25 15:49:04 \\[debug\\] log_test.go:\\d+ log test\x1b\\[0;00m\n"
-	match, err := regexp.Match(rstr, out)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	if !match {
-		t.Fatalf("Error, 'Debugln' printed %q, not match with expected", string(out))
 	}
 
 }

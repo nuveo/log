@@ -133,22 +133,16 @@ func pln(m msgType, o outType, msg ...interface{}) {
 		lineBreak = "\n"
 	}
 
-	output = fmt.Sprintf("%s%s [%s] %s%s\033[0;00m%s",
+	output = fmt.Sprintf("%s%s [%s] %s%s\033[0;00m",
 		Colors[m],
 		now().UTC().Format("2006/01/02 15:04:05"),
 		Prefixes[m],
 		debugInfo,
-		output,
-		lineBreak)
+		output)
 
-	nChar := len(output)
-	if nChar > MaxLineSize {
-		lastChar := output[nChar-1 : nChar]
+	if len(output) > MaxLineSize {
 		output = output[:MaxLineSize] + "..."
-		if lastChar == "\n" {
-			output = output + "\n"
-		}
 	}
-
+	output = output + lineBreak
 	fmt.Print(output)
 }

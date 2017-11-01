@@ -1,26 +1,21 @@
 package log
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
-	"runtime"
 	"time"
 )
 
-type msgType uint8
-type outType uint8
+type MsgType uint8
+type OutType uint8
 
 const (
-	MessageLog         msgType = 0
-	Message2Log        msgType = 1
-	WarningLog         msgType = 2
-	DebugLog           msgType = 3
-	ErrorLog           msgType = 4
-	FormattedOut       outType = 0
-	LineOut            outType = 1
+	MessageLog         MsgType = 0
+	Message2Log        MsgType = 1
+	WarningLog         MsgType = 2
+	DebugLog           MsgType = 3
+	ErrorLog           MsgType = 4
+	FormattedOut       OutType = 0
+	LineOut            OutType = 1
 	DefaultMaxLineSize int     = 2000
 )
 
@@ -51,98 +46,92 @@ var (
 		ErrorLog:    "error",
 	}
 
-	now = time.Now
+	Now = time.Now
+
+	Loggers []Logger
 )
+
+type Logger struct {
+	HTTPError func(w http.ResponseWriter, code int)
+	Fatal     func(msg ...interface{})
+	Errorln   func(msg ...interface{})
+	Errorf    func(msg ...interface{})
+	Warningln func(msg ...interface{})
+	Warningf  func(msg ...interface{})
+	Println   func(msg ...interface{})
+	Printf    func(msg ...interface{})
+	Debugln   func(msg ...interface{})
+	Debugf    func(msg ...interface{})
+}
 
 // HTTPError write lot to stdout and return json error on http.ResponseWriter with http error code.
 func HTTPError(w http.ResponseWriter, code int) {
-	msg := http.StatusText(code)
-	Errorln(msg)
-	m := make(map[string]string)
-	m["status"] = "error"
-	m["error"] = msg
-	b, _ := json.MarshalIndent(m, "", "\t")
-	http.Error(w, string(b), code)
+	for _, l := range Loggers {
+		l.HTTPError(w, code)
+	}
 }
 
 // Fatal show message with line break at the end and exit to OS.
 func Fatal(msg ...interface{}) {
-	pln(ErrorLog, LineOut, msg...)
-	os.Exit(-1)
+	for _, l := range Loggers {
+		l.Fatal(msg)
+	}
 }
 
 // Errorln message with line break at the end.
 func Errorln(msg ...interface{}) {
-	pln(ErrorLog, LineOut, msg...)
+	for _, l := range Loggers {
+		l.Errorln(msg)
+	}
 }
 
 // Errorf shows formatted error message on stdout without line break at the end.
 func Errorf(msg ...interface{}) {
-	pln(ErrorLog, FormattedOut, msg...)
+	for _, l := range Loggers {
+		l.Errorf(msg)
+	}
 }
 
 // Warningln shows warning message on stdout with line break at the end.
 func Warningln(msg ...interface{}) {
-	pln(WarningLog, LineOut, msg...)
+	for _, l := range Loggers {
+		l.Warningln(msg)
+	}
 }
 
 // Warningf shows formatted warning message on stdout without line break at the end.
 func Warningf(msg ...interface{}) {
-	pln(WarningLog, FormattedOut, msg...)
+	for _, l := range Loggers {
+		l.Warningf(msg)
+	}
 }
 
 // Println shows message on stdout with line break at the end.
 func Println(msg ...interface{}) {
-	pln(MessageLog, LineOut, msg...)
+	for _, l := range Loggers {
+		l.Println(msg)
+	}
 }
 
 // Printf shows formatted message on stdout without line break at the end.
 func Printf(msg ...interface{}) {
-	pln(MessageLog, FormattedOut, msg...)
+	for _, l := range Loggers {
+		l.Printf(msg)
+	}
 }
 
 // Debugln shows debug message on stdout with line break at the end.
 // If debug mode is not active no message is displayed
 func Debugln(msg ...interface{}) {
-	pln(DebugLog, LineOut, msg...)
+	for _, l := range Loggers {
+		l.Debugln(msg)
+	}
 }
 
 // Debugf shows debug message on stdout without line break at the end.
 // If debug mode is not active no message is displayed
 func Debugf(msg ...interface{}) {
-	pln(DebugLog, FormattedOut, msg...)
-}
-
-func pln(m msgType, o outType, msg ...interface{}) {
-	if m == DebugLog && !DebugMode {
-		return
+	for _, l := range Loggers {
+		l.Debugf(msg)
 	}
-
-	var debugInfo, lineBreak, output string
-
-	if DebugMode {
-		_, fn, line, _ := runtime.Caller(2)
-		fn = filepath.Base(fn)
-		debugInfo = fmt.Sprintf("%s:%d ", fn, line)
-	}
-
-	if o == FormattedOut {
-		output = fmt.Sprintf(msg[0].(string), msg[1:]...)
-	} else {
-		output = fmt.Sprint(msg...)
-		lineBreak = "\n"
-	}
-
-	output = fmt.Sprintf("%s%s [%s] %s%s\033[0;00m",
-		Colors[m],
-		now().UTC().Format("2006/01/02 15:04:05"),
-		Prefixes[m],
-		debugInfo,
-		output)
-
-	if len(output) > MaxLineSize {
-		output = output[:MaxLineSize] + "..."
-	}
-	output = output + lineBreak
-	fmt.Print(output)
 }

@@ -26,8 +26,11 @@ const (
 	DefaultTimeFormat  string  = "2006/01/02 15:04:05"
 )
 
+// AdapterFunc is the type for the function adapter
+// any function that has this signature can be used as an adapter
 type AdapterFunc func(m msgType, o outType, config map[string]string, msg ...interface{})
 
+// AdapterPod contains the metadata of an adapter
 type AdapterPod struct {
 	Adapter AdapterFunc
 	Config  map[string]string
@@ -65,12 +68,12 @@ var (
 	}
 
 	now      = time.Now
-	Adapters = make(map[string]AdapterPod)
+	adapters = make(map[string]AdapterPod)
 	lock     = sync.RWMutex{}
 )
 
 func init() {
-	if len(Adapters) == 0 {
+	if len(adapters) == 0 {
 		SetAdapter("stdout", AdapterPod{
 			Adapter: pln,
 			Config:  nil,
@@ -78,16 +81,17 @@ func init() {
 	}
 }
 
+// SetAdapter allows to add an adapter and parameters
 func SetAdapter(name string, adapter AdapterPod) {
 	lock.Lock()
 	defer lock.Unlock()
-	Adapters[name] = adapter
+	adapters[name] = adapter
 }
 
 func runAdapters(m msgType, o outType, msg ...interface{}) {
 	lock.RLock()
 	defer lock.RUnlock()
-	for _, a := range Adapters {
+	for _, a := range adapters {
 		a.Adapter(m, o, a.Config, msg...)
 	}
 }

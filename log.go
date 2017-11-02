@@ -77,11 +77,9 @@ func init() {
 	}
 }
 
-//func pln(m msgType, o outType, config map[string]string, msg ...interface{}) {
-
 func runAdapters(m msgType, o outType, msg ...interface{}) {
 	for _, f := range Adapters {
-		f.Adapter(m, o, f.Config, msg)
+		f.Adapter(m, o, f.Config, msg...)
 	}
 }
 
@@ -152,7 +150,7 @@ func pln(m msgType, o outType, config map[string]string, msg ...interface{}) {
 	var debugInfo, lineBreak, output string
 
 	if DebugMode {
-		_, fn, line, _ := runtime.Caller(2)
+		_, fn, line, _ := runtime.Caller(3)
 		fn = filepath.Base(fn)
 		debugInfo = fmt.Sprintf("%s:%d ", fn, line)
 	}

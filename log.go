@@ -11,24 +11,24 @@ import (
 	"time"
 )
 
-type msgType uint8
-type outType uint8
+type MsgType uint8
+type OutType uint8
 
 const (
-	MessageLog         msgType = 0
-	Message2Log        msgType = 1
-	WarningLog         msgType = 2
-	DebugLog           msgType = 3
-	ErrorLog           msgType = 4
-	FormattedOut       outType = 0
-	LineOut            outType = 1
+	MessageLog         MsgType = 0
+	Message2Log        MsgType = 1
+	WarningLog         MsgType = 2
+	DebugLog           MsgType = 3
+	ErrorLog           MsgType = 4
+	FormattedOut       OutType = 0
+	LineOut            OutType = 1
 	DefaultMaxLineSize int     = 2000
 	DefaultTimeFormat  string  = "2006/01/02 15:04:05"
 )
 
 // AdapterFunc is the type for the function adapter
 // any function that has this signature can be used as an adapter
-type AdapterFunc func(m msgType, o outType, config map[string]string, msg ...interface{})
+type AdapterFunc func(m MsgType, o OutType, config map[string]string, msg ...interface{})
 
 // AdapterPod contains the metadata of an adapter
 type AdapterPod struct {
@@ -88,7 +88,16 @@ func SetAdapter(name string, adapter AdapterPod) {
 	adapters[name] = adapter
 }
 
-func runAdapters(m msgType, o outType, msg ...interface{}) {
+// SetAdapterConfig allows set new adapter parameters
+func SetAdapterConfig(name string, config map[string]string) {
+	lock.Lock()
+	defer lock.Unlock()
+	a := adapters[name]
+	a.Config = config
+	adapters[name] = a
+}
+
+func runAdapters(m MsgType, o OutType, msg ...interface{}) {
 	lock.RLock()
 	defer lock.RUnlock()
 	for _, a := range adapters {
@@ -155,7 +164,7 @@ func Debugf(msg ...interface{}) {
 	runAdapters(DebugLog, FormattedOut, msg...)
 }
 
-func pln(m msgType, o outType, config map[string]string, msg ...interface{}) {
+func pln(m MsgType, o OutType, config map[string]string, msg ...interface{}) {
 	if m == DebugLog && !DebugMode {
 		return
 	}

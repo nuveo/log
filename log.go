@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -64,22 +65,30 @@ var (
 	}
 
 	now      = time.Now
-	Adapters []AdapterPod
+	Adapters = make(map[string]AdapterPod)
+	lock     = sync.RWMutex{}
 )
 
 func init() {
 	if len(Adapters) == 0 {
-		a := AdapterPod{
+		SetAdapter("stdout", AdapterPod{
 			Adapter: pln,
 			Config:  nil,
-		}
-		Adapters = append(Adapters, a)
+		})
 	}
 }
 
+func SetAdapter(name string, adapter AdapterPod) {
+	lock.Lock()
+	defer lock.Unlock()
+	Adapters[name] = adapter
+}
+
 func runAdapters(m msgType, o outType, msg ...interface{}) {
-	for _, f := range Adapters {
-		f.Adapter(m, o, f.Config, msg...)
+	lock.RLock()
+	defer lock.RUnlock()
+	for _, a := range Adapters {
+		a.Adapter(m, o, a.Config, msg...)
 	}
 }
 
@@ -150,7 +159,7 @@ func pln(m msgType, o outType, config map[string]string, msg ...interface{}) {
 	var debugInfo, lineBreak, output string
 
 	if DebugMode {
-		_, fn, line, _ := runtime.Caller(3)
+		_, fn, line, _ := runtime.Caller(5)
 		fn = filepath.Base(fn)
 		debugInfo = fmt.Sprintf("%s:%d ", fn, line)
 	}

@@ -25,6 +25,13 @@ const (
 	DefaultTimeFormat  string  = "2006/01/02 15:04:05"
 )
 
+type AdapterFunc func(m msgType, o outType, config map[string]string, msg ...interface{})
+
+type AdapterPod struct {
+	Adapter AdapterFunc
+	Config  map[string]string
+}
+
 var (
 	// DebugMode Enable debug mode
 	DebugMode bool
@@ -56,8 +63,27 @@ var (
 		ErrorLog:    "error",
 	}
 
-	now = time.Now
+	now      = time.Now
+	Adapters []AdapterPod
 )
+
+func init() {
+	if len(Adapters) == 0 {
+		a := AdapterPod{
+			Adapter: pln,
+			Config:  nil,
+		}
+		Adapters = append(Adapters, a)
+	}
+}
+
+//func pln(m msgType, o outType, config map[string]string, msg ...interface{}) {
+
+func runAdapters(m msgType, o outType, msg ...interface{}) {
+	for _, f := range Adapters {
+		f.Adapter(m, o, f.Config, msg)
+	}
+}
 
 // HTTPError write lot to stdout and return json error on http.ResponseWriter with http error code.
 func HTTPError(w http.ResponseWriter, code int) {
@@ -72,53 +98,53 @@ func HTTPError(w http.ResponseWriter, code int) {
 
 // Fatal show message with line break at the end and exit to OS.
 func Fatal(msg ...interface{}) {
-	pln(ErrorLog, LineOut, msg...)
+	runAdapters(ErrorLog, LineOut, msg...)
 	os.Exit(-1)
 }
 
 // Errorln message with line break at the end.
 func Errorln(msg ...interface{}) {
-	pln(ErrorLog, LineOut, msg...)
+	runAdapters(ErrorLog, LineOut, msg...)
 }
 
 // Errorf shows formatted error message on stdout without line break at the end.
 func Errorf(msg ...interface{}) {
-	pln(ErrorLog, FormattedOut, msg...)
+	runAdapters(ErrorLog, FormattedOut, msg...)
 }
 
 // Warningln shows warning message on stdout with line break at the end.
 func Warningln(msg ...interface{}) {
-	pln(WarningLog, LineOut, msg...)
+	runAdapters(WarningLog, LineOut, msg...)
 }
 
 // Warningf shows formatted warning message on stdout without line break at the end.
 func Warningf(msg ...interface{}) {
-	pln(WarningLog, FormattedOut, msg...)
+	runAdapters(WarningLog, FormattedOut, msg...)
 }
 
 // Println shows message on stdout with line break at the end.
 func Println(msg ...interface{}) {
-	pln(MessageLog, LineOut, msg...)
+	runAdapters(MessageLog, LineOut, msg...)
 }
 
 // Printf shows formatted message on stdout without line break at the end.
 func Printf(msg ...interface{}) {
-	pln(MessageLog, FormattedOut, msg...)
+	runAdapters(MessageLog, FormattedOut, msg...)
 }
 
 // Debugln shows debug message on stdout with line break at the end.
 // If debug mode is not active no message is displayed
 func Debugln(msg ...interface{}) {
-	pln(DebugLog, LineOut, msg...)
+	runAdapters(DebugLog, LineOut, msg...)
 }
 
 // Debugf shows debug message on stdout without line break at the end.
 // If debug mode is not active no message is displayed
 func Debugf(msg ...interface{}) {
-	pln(DebugLog, FormattedOut, msg...)
+	runAdapters(DebugLog, FormattedOut, msg...)
 }
 
-func pln(m msgType, o outType, msg ...interface{}) {
+func pln(m msgType, o outType, config map[string]string, msg ...interface{}) {
 	if m == DebugLog && !DebugMode {
 		return
 	}

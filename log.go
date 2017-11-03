@@ -94,7 +94,7 @@ func SetAdapterConfig(name string, config map[string]string) {
 	a := adapters[name]
 	a.Config = config
 	adapters[name] = a
-	defer lock.Unlock()
+	lock.Unlock()
 }
 
 func runAdapters(m MsgType, o OutType, msg ...interface{}) {

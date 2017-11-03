@@ -88,6 +88,13 @@ func AddAdapter(name string, adapter AdapterPod) {
 	lock.Unlock()
 }
 
+// RemoveAapter remove the adapter from list
+func RemoveAapter(name string) {
+	lock.Lock()
+	delete(adapters, name)
+	lock.Unlock()
+}
+
 // SetAdapterConfig allows set new adapter parameters
 func SetAdapterConfig(name string, config map[string]string) {
 	lock.Lock()

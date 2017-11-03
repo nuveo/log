@@ -11,8 +11,10 @@ import (
 	"time"
 )
 
-type MsgType uint8
-type OutType uint8
+type (
+	MsgType uint8
+	OutType uint8
+)
 
 const (
 	MessageLog         MsgType = 0

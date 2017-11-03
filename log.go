@@ -74,27 +74,27 @@ var (
 
 func init() {
 	if len(adapters) == 0 {
-		SetAdapter("stdout", AdapterPod{
+		AddAdapter("stdout", AdapterPod{
 			Adapter: pln,
 			Config:  nil,
 		})
 	}
 }
 
-// SetAdapter allows to add an adapter and parameters
-func SetAdapter(name string, adapter AdapterPod) {
+// AddAdapter allows to add an adapter and parameters
+func AddAdapter(name string, adapter AdapterPod) {
 	lock.Lock()
-	defer lock.Unlock()
 	adapters[name] = adapter
+	lock.Unlock()
 }
 
 // SetAdapterConfig allows set new adapter parameters
 func SetAdapterConfig(name string, config map[string]string) {
 	lock.Lock()
-	defer lock.Unlock()
 	a := adapters[name]
 	a.Config = config
 	adapters[name] = a
+	defer lock.Unlock()
 }
 
 func runAdapters(m MsgType, o OutType, msg ...interface{}) {

@@ -13,7 +13,7 @@ import (
 var now = time.Now
 
 func init() {
-	log.SetAdapter("file", log.AdapterPod{
+	log.AddAdapter("file", log.AdapterPod{
 		Adapter: fileWrite,
 		Config:  map[string]string{"fileName": "file.log"},
 	})
@@ -49,7 +49,6 @@ func fileWrite(m log.MsgType, o log.OutType, config map[string]string, msg ...in
 		output = output[:log.MaxLineSize] + "..."
 	}
 	output = output + lineBreak
-	fmt.Print(output)
 
 	f, err := os.OpenFile(config["fileName"], os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {

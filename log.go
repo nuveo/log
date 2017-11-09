@@ -30,12 +30,12 @@ const (
 
 // AdapterFunc is the type for the function adapter
 // any function that has this signature can be used as an adapter
-type AdapterFunc func(m MsgType, o OutType, config map[string]string, msg ...interface{})
+type AdapterFunc func(m MsgType, o OutType, config map[string]interface{}, msg ...interface{})
 
 // AdapterPod contains the metadata of an adapter
 type AdapterPod struct {
 	Adapter AdapterFunc
-	Config  map[string]string
+	Config  map[string]interface{}
 }
 
 var (
@@ -98,7 +98,7 @@ func RemoveAapter(name string) {
 }
 
 // SetAdapterConfig allows set new adapter parameters
-func SetAdapterConfig(name string, config map[string]string) {
+func SetAdapterConfig(name string, config map[string]interface{}) {
 	lock.Lock()
 	a := adapters[name]
 	a.Config = config
@@ -173,7 +173,7 @@ func Debugf(msg ...interface{}) {
 	runAdapters(DebugLog, FormattedOut, msg...)
 }
 
-func pln(m MsgType, o OutType, config map[string]string, msg ...interface{}) {
+func pln(m MsgType, o OutType, config map[string]interface{}, msg ...interface{}) {
 	if m == DebugLog && !DebugMode {
 		return
 	}

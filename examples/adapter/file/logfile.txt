@@ -2,3 +2,7 @@
 2017/11/03 00:50:59 [warning] Warning message
 2017/11/03 00:50:59 [error] Error message
 2017/11/03 00:50:59 [error] Fatal error message
+2017/11/09 14:14:07 [msg] Info message
+2017/11/09 14:14:07 [warning] Warning message
+2017/11/09 14:14:07 [error] Error message
+2017/11/09 14:14:07 [error] Fatal error message

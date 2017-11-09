@@ -2,16 +2,20 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/nuveo/log"
-	_ "github.com/nuveo/log/adapters/file"
+	_ "github.com/nuveo/log/adapters/sentry"
 )
 
 func main() {
 
 	config := make(map[string]interface{})
-	config["fileName"] = "logfile.txt"
-	log.SetAdapterConfig("file", config)
+	config["dsn"] = os.Getenv("SENTRY_DSN")
+	config["tags"] = map[string]string{"core": "auth"}
+
+	config["enableMsgTypes"] = []log.MsgType{log.ErrorLog}
+	log.SetAdapterConfig("sentry", config)
 
 	log.Debugln("Debug message")
 

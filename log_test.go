@@ -202,7 +202,7 @@ func TestTimeFormat(t *testing.T) {
 	}
 }
 
-func fackAdapter(m MsgType, o OutType, config map[string]string, msg ...interface{}) {
+func fackAdapter(m MsgType, o OutType, config map[string]interface{}, msg ...interface{}) {
 	fmt.Println(msg...)
 }
 
@@ -212,7 +212,7 @@ func TestSetAdapterConfig(t *testing.T) {
 		Config:  nil,
 	})
 
-	SetAdapterConfig("fake", map[string]string{"test": "value"})
+	SetAdapterConfig("fake", map[string]interface{}{"test": "value"})
 
 	config := adapters["fake"].Config
 	if config["test"] != "value" {

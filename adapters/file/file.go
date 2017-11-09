@@ -15,11 +15,11 @@ var now = time.Now
 func init() {
 	log.AddAdapter("file", log.AdapterPod{
 		Adapter: fileWrite,
-		Config:  map[string]string{"fileName": "file.log"},
+		Config:  map[string]interface{}{"fileName": "file.log"},
 	})
 }
 
-func fileWrite(m log.MsgType, o log.OutType, config map[string]string, msg ...interface{}) {
+func fileWrite(m log.MsgType, o log.OutType, config map[string]interface{}, msg ...interface{}) {
 	if m == log.DebugLog && !log.DebugMode {
 		return
 	}
@@ -50,7 +50,7 @@ func fileWrite(m log.MsgType, o log.OutType, config map[string]string, msg ...in
 	}
 	output = output + lineBreak
 
-	f, err := os.OpenFile(config["fileName"], os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	f, err := os.OpenFile(config["fileName"].(string), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		panic(err)
 	}

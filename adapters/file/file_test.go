@@ -15,17 +15,17 @@ func TestFileWrite(t *testing.T) {
 	fileWrite(
 		log.ErrorLog,
 		log.LineOut,
-		map[string]string{"fileName": "logfile.txt"},
+		map[string]interface{}{"fileName": "logfile.txt"},
 		"test log")
 	fileWrite(
 		log.DebugLog,
 		log.LineOut,
-		map[string]string{"fileName": "logfile.txt"},
+		map[string]interface{}{"fileName": "logfile.txt"},
 		"test log")
 	fileWrite(
 		log.WarningLog,
 		log.LineOut,
-		map[string]string{"fileName": "logfile.txt"},
+		map[string]interface{}{"fileName": "logfile.txt"},
 		"test log")
 
 	b, err := ioutil.ReadFile("logfile.txt")

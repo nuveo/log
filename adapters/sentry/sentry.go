@@ -35,7 +35,11 @@ func containsType(m log.MsgType, ts []log.MsgType) bool {
 func sentryLog(m log.MsgType, o log.OutType, config map[string]interface{}, msg ...interface{}) {
 	ts := config["enableMsgTypes"].([]log.MsgType)
 
-	if m == log.DebugLog && !log.DebugMode && !containsType(m, ts) {
+	if !containsType(m, ts) {
+		return
+	}
+
+	if m == log.DebugLog && !log.DebugMode {
 		return
 	}
 

@@ -16,7 +16,8 @@ var now = time.Now
 func init() {
 	log.AddAdapter("sentry", log.AdapterPod{
 		Adapter: sentryLog,
-		Config: map[string]interface{}{"dsn": "",
+		Config: map[string]interface{}{
+			"dsn":            "",
 			"tags":           map[string]string{},
 			"enableMsgTypes": []log.MsgType{log.ErrorLog},
 		},

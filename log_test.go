@@ -52,6 +52,7 @@ func validate(key string, logFunc func(msg ...interface{}), valueExpected string
 
 func TestLog(t *testing.T) {
 	now = func() time.Time { return time.Unix(1498405744, 0) }
+	timeFormated := now().Format("2006/01/02 15:04:05")
 	DebugMode = false
 
 	data := []struct {
@@ -59,9 +60,9 @@ func TestLog(t *testing.T) {
 		logFunc       func(msg ...interface{})
 		expectedValue string
 	}{
-		{"Println", Println, "\x1b\\[37m2017/06/25 15:49:04 \\[msg\\] log test\x1b\\[0;00m\n"},
-		{"Errorln", Errorln, "\x1b\\[91m2017/06/25 15:49:04 \\[error\\] log test\x1b\\[0;00m\n"},
-		{"Warningln", Warningln, "\x1b\\[93m2017/06/25 15:49:04 \\[warning\\] log test\x1b\\[0;00m\n"},
+		{"Println", Println, "\x1b\\[37m" + timeFormated + " \\[msg\\] log test\x1b\\[0;00m\n"},
+		{"Errorln", Errorln, "\x1b\\[91m" + timeFormated + " \\[error\\] log test\x1b\\[0;00m\n"},
+		{"Warningln", Warningln, "\x1b\\[93m" + timeFormated + " \\[warning\\] log test\x1b\\[0;00m\n"},
 		{"Debugln", Debugln, ""},
 	}
 	formattedData := []struct {
@@ -69,9 +70,9 @@ func TestLog(t *testing.T) {
 		logFunc       func(msg ...interface{})
 		expectedValue string
 	}{
-		{"Printf", Printf, "\x1b\\[37m2017/06/25 15:49:04 \\[msg\\] formatted log 1.12\x1b\\[0;00m"},
-		{"Errorf", Errorf, "\x1b\\[91m2017/06/25 15:49:04 \\[error\\] formatted log 1.12\x1b\\[0;00m"},
-		{"Warningf", Warningf, "\x1b\\[93m2017/06/25 15:49:04 \\[warning\\] formatted log 1.12\x1b\\[0;00m"},
+		{"Printf", Printf, "\x1b\\[37m" + timeFormated + " \\[msg\\] formatted log 1.12\x1b\\[0;00m"},
+		{"Errorf", Errorf, "\x1b\\[91m" + timeFormated + " \\[error\\] formatted log 1.12\x1b\\[0;00m"},
+		{"Warningf", Warningf, "\x1b\\[93m" + timeFormated + " \\[warning\\] formatted log 1.12\x1b\\[0;00m"},
 		{"Debugf", Debugf, ""},
 	}
 	for _, v := range data {
@@ -88,11 +89,11 @@ func TestLog(t *testing.T) {
 	}
 	DebugMode = true
 
-	err := validate("Debugln", Debugln, "\x1b\\[96m2017/06/25 15:49:04 \\[debug\\] log_test.go:\\d+ log test\x1b\\[0;00m\n", "log test")
+	err := validate("Debugln", Debugln, "\x1b\\[96m"+timeFormated+" \\[debug\\] log_test.go:\\d+ log test\x1b\\[0;00m\n", "log test")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	err = validate("Debugf", Debugf, "\x1b\\[96m2017/06/25 15:49:04 \\[debug\\] log_test.go:\\d+ formatted log 1.12\x1b\\[0;00m", "%s %s %.2f", "formatted", "log", 1.1234)
+	err = validate("Debugf", Debugf, "\x1b\\[96m"+timeFormated+" \\[debug\\] log_test.go:\\d+ formatted log 1.12\x1b\\[0;00m", "%s %s %.2f", "formatted", "log", 1.1234)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -101,6 +102,7 @@ func TestLog(t *testing.T) {
 
 func TestHTTPError(t *testing.T) {
 	now = func() time.Time { return time.Unix(1498405744, 0) }
+	timeFormated := now().Format("2006/01/02 15:04:05")
 
 	rescueStdout := os.Stdout
 	DebugMode = false
@@ -134,7 +136,7 @@ func TestHTTPError(t *testing.T) {
 		return
 	}
 
-	valueExpected := "\x1b[91m2017/06/25 15:49:04 [error] Bad Request\x1b[0;00m\n"
+	valueExpected := "\x1b[91m" + timeFormated + " [error] Bad Request\x1b[0;00m\n"
 	if string(out) != valueExpected {
 		t.Fatalf("Error, 'HTTPError' printed %q, expected %q", string(out), valueExpected)
 	}
@@ -152,6 +154,7 @@ func TestHTTPError(t *testing.T) {
 
 func TestMaxLineSize(t *testing.T) {
 	now = func() time.Time { return time.Unix(1498405744, 0) }
+	timeFormated := now().Format("2006/01/02 15:04:05")
 	DebugMode = false
 
 	MaxLineSize = 30
@@ -160,7 +163,7 @@ func TestMaxLineSize(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	expectedValue := []byte("\x1b[37m2017/06/25 15:49:04 [msg]...")
+	expectedValue := []byte("\x1b[37m" + timeFormated + " [msg]...")
 	if !bytes.Equal(out, expectedValue) {
 		t.Fatalf("Error, printed %q, expected %q", string(out), expectedValue)
 	}
@@ -170,7 +173,7 @@ func TestMaxLineSize(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	expectedValue = []byte("\x1b[37m2017/06/25 15:49:04 [msg]...\n")
+	expectedValue = []byte("\x1b[37m" + timeFormated + " [msg]...\n")
 	if !bytes.Equal(out, expectedValue) {
 		t.Fatalf("Error, printed %q, expected %q", string(out), expectedValue)
 	}
@@ -178,6 +181,7 @@ func TestMaxLineSize(t *testing.T) {
 
 func TestTimeFormat(t *testing.T) {
 	now = func() time.Time { return time.Unix(1498405744, 0) }
+	timeFormated := now().Format("2006/01/02 15:04:05")
 	DebugMode = false
 
 	out, err := getOutput(Printf, "testing a log message")
@@ -185,18 +189,19 @@ func TestTimeFormat(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	expectedValue := []byte("\x1b[37m2017/06/25 15:49:04 [msg]...")
+	expectedValue := []byte("\x1b[37m" + timeFormated + " [msg]...")
 	if !bytes.Equal(out, expectedValue) {
 		t.Fatalf("Error, printed %q, expected %q", string(out), expectedValue)
 	}
 
-	TimeFormat = time.RFC3339
+	TimeFormat = "2006-01-02T15:04:05"
 	out, err = getOutput(Printf, "testing a log message")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
+	timeFormated = now().Format("2006-01-02T15:04:05")
 
-	expectedValue = []byte("\x1b[37m2017-06-25T15:49:04Z [msg...")
+	expectedValue = []byte("\x1b[37m" + timeFormated + " [msg]...")
 	if !bytes.Equal(out, expectedValue) {
 		t.Fatalf("Error, printed %q, expected %q", string(out), expectedValue)
 	}

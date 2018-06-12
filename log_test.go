@@ -199,7 +199,7 @@ func TestTimeFormat(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	timeFormated = now().Format(time.RFC3339)
+	timeFormated = now().Format("2006-01-02T15:04:05Z07:00")
 
 	expectedValue = []byte("\x1b[37m" + timeFormated + "...")
 	if !bytes.Equal(out, expectedValue) {

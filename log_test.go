@@ -194,14 +194,14 @@ func TestTimeFormat(t *testing.T) {
 		t.Fatalf("Error, printed %q, expected %q", string(out), expectedValue)
 	}
 
-	TimeFormat = time.RFC3339
+	TimeFormat = "2006-01-02T15:04:05"
 	out, err = getOutput(Printf, "testing a log message")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	timeFormated = now().Format("2006-01-02T15:04:05Z07:00")
+	timeFormated = now().Format("2006-01-02T15:04:05")
 
-	expectedValue = []byte("\x1b[37m" + timeFormated + "...")
+	expectedValue = []byte("\x1b[37m" + timeFormated + " [msg]...")
 	if !bytes.Equal(out, expectedValue) {
 		t.Fatalf("Error, printed %q, expected %q", string(out), expectedValue)
 	}

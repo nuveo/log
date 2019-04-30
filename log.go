@@ -80,7 +80,7 @@ var (
 func init() {
 	if len(adapters) == 0 {
 		AddAdapter("stdout", AdapterPod{
-			Adapter: pln,
+			Adapter: DefaultAdapter,
 			Config:  nil,
 		})
 	}
@@ -176,7 +176,8 @@ func Debugf(msg ...interface{}) {
 	runAdapters(DebugLog, FormattedOut, msg...)
 }
 
-func pln(m MsgType, o OutType, config map[string]interface{}, msg ...interface{}) {
+// DefaultAdapter of log package
+func DefaultAdapter(m MsgType, o OutType, config map[string]interface{}, msg ...interface{}) {
 	if m == DebugLog && !DebugMode {
 		return
 	}

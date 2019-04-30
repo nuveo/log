@@ -93,8 +93,8 @@ func AddAdapter(name string, adapter AdapterPod) {
 	lock.Unlock()
 }
 
-// RemoveAapter remove the adapter from list
-func RemoveAapter(name string) {
+// RemoveAdapter remove the adapter from list
+func RemoveAdapter(name string) {
 	lock.Lock()
 	delete(adapters, name)
 	lock.Unlock()

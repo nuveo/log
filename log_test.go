@@ -216,16 +216,12 @@ func TestSetAdapterConfig(t *testing.T) {
 		Adapter: fackAdapter,
 		Config:  nil,
 	})
-
 	SetAdapterConfig("fake", map[string]interface{}{"test": "value"})
-
 	config := adapters["fake"].Config
 	if config["test"] != "value" {
 		t.Fatalf("Error, expecte \"value\", got %v", config["test"])
 	}
-
-	RemoveAapter("fake")
-
+	RemoveAdapter("fake")
 	if _, ok := adapters["fake"]; ok {
 		t.Fatal("Error expected false")
 	}
